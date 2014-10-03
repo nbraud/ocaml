@@ -53,15 +53,18 @@ static inline void sipround(hash_t h) {
 	h->v2  = ROTL(h->v2,32);
 }
 
+static hash_t hash_init(hash_t h, uint64 k0, uint64 k1) {
+	h->v0 = k0 ^ 0x736f6d6570736575;
+	h->v1 = 0x646f72616e646f6d;
+	h->v2 = k1 ^ 0x6c7967656e657261;
+	h->v3 = 0x7465646279746573;
+	return h;
+}
+
 CAMLexport hash_t caml_hash_init(void* a, hash_key k) {
 	hash_t h = (hash_t) a;
 	uint64 l = (uint64) k;
-
-	h->v0 = l ^ 0x736f6d6570736575;
-	h->v1 = 0x646f72616e646f6d;
-	h->v2 = l ^ 0x6c7967656e657261;
-	h->v3 = 0x7465646279746573;
-	return h;
+	return hash_init(h, l, l);
 }
 
 CAMLexport hash_out caml_hash_final(hash_t h) {
@@ -205,6 +208,31 @@ CAMLprim value caml_hash(value count, value limit, value seed, value obj)
   char mem[CAML_HASH_T_SIZE];
   hash_t h = caml_hash_init(mem, Int_val(seed));
   return hash(h, count, limit, obj);
+}
+
+CAMLprim value caml_hash_make(value key1, value key2)
+{
+  CAMLlocal1 (v);
+#ifdef ARCH_SIXTYFOUR
+  v = caml_alloc_small(4, Abstract_tag);
+#else
+  v = caml_alloc_small(8, Abstract_tag);
+#endif
+
+  hash_t h = (hash_t) Data_custom_val(v);
+  hash_init(h, Int64_val(key1), Int64_val(key2));
+  CAMLreturn(v);
+}
+
+CAMLprim value caml_hash_state(value count, value limit, value state, value obj)
+{
+  hash_t h0 = (hash_t) Data_custom_val(state);
+
+  /* The state is copied in an heap-allocated block to avoid mutation */
+  struct hash_internal h;
+  memcpy(h0, &h, CAML_HASH_T_SIZE);
+
+  return hash(&h0, count, limit, obj);
 }
 
 static value hash(hash_t h, value count, value limit, value obj)
