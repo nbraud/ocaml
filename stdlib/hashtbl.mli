@@ -338,6 +338,11 @@ val seeded_hash : int -> 'a -> int
    an integer seed.
    @since 4.00.0 *)
 
+type hash_t
+val make_state : Int64.t -> Int64.t -> hash_t
+val hash_state : ?meaningful:int -> ?total:int -> hash_t -> 'a -> int
+
+
 val hash_param : int -> int -> 'a -> int
 (** [Hashtbl.hash_param meaningful total x] computes a hash value for [x],
    with the same properties as for [hash]. The two extra integer

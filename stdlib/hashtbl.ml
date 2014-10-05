@@ -22,6 +22,16 @@ let hash x = seeded_hash_param 10 100 0 x
 let hash_param n1 n2 x = seeded_hash_param n1 n2 0 x
 let seeded_hash seed x = seeded_hash_param 10 100 seed x
 
+type hash_t
+external _make_hash :
+  Int64.t -> Int64.t -> hash_t = "caml_hash_make"
+external _hash_state :
+  int -> int -> hash_t -> 'a -> int = "caml_hash_state" "noalloc"
+
+let make_state k0 k1 = _make_hash k0 k1
+let hash_state ?(meaningful = 10) ?(total = 100) state x =
+  _hash_state meaningful total state x
+
 (* We do dynamic hashing, and resize the table and rehash the elements
    when buckets become too long. *)
 
