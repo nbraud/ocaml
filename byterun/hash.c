@@ -16,9 +16,11 @@
 /* The interface of this file is in "mlvalues.h" (for [caml_hash_variant])
    and in "hash.h" (for the other exported functions). */
 
+#include <string.h>
 #include "mlvalues.h"
 #include "custom.h"
 #include "memory.h"
+#include "alloc.h"
 #include "hash.h"
 
 #ifdef ARCH_INT64_TYPE
@@ -53,7 +55,7 @@ static inline void sipround(hash_t h) {
 	h->v2  = ROTL(h->v2,32);
 }
 
-static hash_t hash_init(hash_t h, uint64 k0, uint64 k1) {
+static inline hash_t hash_init(hash_t h, uint64 k0, uint64 k1) {
 	h->v0 = k0 ^ 0x736f6d6570736575;
 	h->v1 = 0x646f72616e646f6d;
 	h->v2 = k1 ^ 0x6c7967656e657261;
@@ -231,7 +233,7 @@ CAMLprim value caml_hash_state(value count, value limit, value state, value obj)
   struct hash_internal h;
   memcpy(h0, &h, CAML_HASH_T_SIZE);
 
-  return hash(&h0, count, limit, obj);
+  return hash(&h, count, limit, obj);
 }
 
 static value hash(hash_t h, value count, value limit, value obj)
