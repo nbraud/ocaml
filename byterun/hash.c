@@ -212,16 +212,15 @@ CAMLprim value caml_hash(value count, value limit, value seed, value obj)
 
 CAMLprim value caml_hash_make(value key1, value key2)
 {
+  CAMLparam2 (key1, key2);
   CAMLlocal1 (v);
-#ifdef ARCH_SIXTYFOUR
-  v = caml_alloc_small(4, Abstract_tag);
-#else
-  v = caml_alloc_small(8, Abstract_tag);
-#endif
+
+  const mlsize_t wosize = 1 + (CAML_HASH_T_SIZE + sizeof(value) - 1) / sizeof(value);
+  v = caml_alloc_small(wosize, Abstract_tag);
 
   hash_t h = (hash_t) Data_custom_val(v);
   hash_init(h, Int64_val(key1), Int64_val(key2));
-  CAMLreturn(v);
+  CAMLreturn (v);
 }
 
 CAMLprim value caml_hash_state(value count, value limit, value state, value obj)
